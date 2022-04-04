@@ -374,22 +374,22 @@ SELECT * FROM order_item
     quantity
     grandTotal
 
-    SELECT OH.order_id, OI.ship_group_seq_id,OISG.customer_party_id,
-            P.first_name, P.last_name, OH.order_date, OI.order_item_seq_id,ORDER_ITEM_SEQ_ID,
-            PR.product_id, OI.item_description, OI.quantity, OI.unit_amount, OH.grand_total
-            FROM order_item_ship_group OISG, person P, product PR, order_header OH, order_item OI
-            WHERE OH.order_id = '1153'
-            GROUP BY OISG.customer_party_id;
+ SELECT OH.order_id, OI.ship_group_seq_id,OISG.customer_party_id, P.first_name,
+        P.last_name, OH.order_date, OI.order_item_seq_id, OI.product_id, OI.item_description,
+        OI.quantity, OI.unit_amount, OH.grand_total FROM order_item_ship_group OISG
+        INNER JOIN person P ON OISG.customer_party_id = P.party_id
+        INNER JOIN order_item OI ON OISG.order_id = OI.order_id
+        INNER JOIN order_header OH ON  OISG.order_id = OH.order_id
+        WHERE OH.order_id = '1153';
 
-    +----------+-------------------+-------------------+------------+-----------+-------------------------+-------------------+-------------------+-------------+-----------------------+----------+-------------+-------------+
-    | order_id | ship_group_seq_id | customer_party_id | first_name | last_name | order_date              | order_item_seq_id | ORDER_ITEM_SEQ_ID | product_id  | item_description      | quantity | unit_amount | grand_total |
-    +----------+-------------------+-------------------+------------+-----------+-------------------------+-------------------+-------------------+-------------+-----------------------+----------+-------------+-------------+
-    | 1153     | 01                | CustDemo1         | Joe        | Public    | 2020-04-19 00:00:00.000 | 01                | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |     31.6400 |
-    | 1153     | 01                | CustDemo3         | Joe        | Public    | 2020-04-19 00:00:00.000 | 01                | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |     31.6400 |
-    | 1153     | 01                | CustDemo4         | Joe        | Public    | 2020-04-19 00:00:00.000 | 01                | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |     31.6400 |
-    | 1153     | 01                | CustDemo5         | Joe        | Public    | 2020-04-19 00:00:00.000 | 01                | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |     31.6400 |
-    | 1153     | 01                | CustDemo6         | Joe        | Public    | 2020-04-19 00:00:00.000 | 01                | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |     31.6400 |
-    +----------+-------------------+-------------------+------------+-----------+-------------------------+-------------------+-------------------+-------------+-----------------------+----------+-------------+-------------+
+ +----------+-------------------+-------------------+------------+-----------+-------------------------+-------------------+-------------+-------------------------+----------+-------------+-------------+
+ | order_id | ship_group_seq_id | customer_party_id | first_name | last_name | order_date              | order_item_seq_id | product_id  | item_description        | quantity | unit_amount | grand_total |
+ +----------+-------------------+-------------------+------------+-----------+-------------------------+-------------------+-------------+-------------------------+----------+-------------+-------------+
+ | 1153     | 01                | CustDemo4         | John       | Norvig    | 2020-04-19 00:00:00.000 | 01                | DEMO_UNIT_3 | Demo Product Unit Three | 1.000000 |    14.99000 |     31.6400 |
+ | 1153     | 01                | CustDemo4         | John       | Norvig    | 2020-04-19 00:00:00.000 | 02                | NULL        | Rental Item             | 1.000000 |     1.33000 |     31.6400 |
+ | 1153     | 01                | CustDemo4         | John       | Norvig    | 2020-04-19 00:00:00.000 | 03                | DEMO_UNIT_4 | Product Unit FourDemo   | 1.000000 |    12.99000 |     31.6400 |
+ | 1153     | 01                | CustDemo4         | John       | Norvig    | 2020-04-19 00:00:00.000 | 04                | NULL        | Rental Item             | 1.000000 |     2.33000 |     31.6400 |
+ +----------+-------------------+-------------------+------------+-----------+-------------------------+-------------------+-------------+-------------------------+----------+-------------+-------------+
 
 ===========================================================================================================
 24) List the below Order details for the customer partyId, CustDemo1.
@@ -403,23 +403,26 @@ SELECT * FROM order_item
     quantity
     unitAmount
 
-SELECT OH.order_id, OSIG.ship_group_seq_id, OH.order_name, OSIG.customer_party_id, OI.order_item_seq_id,
-        P.product_id, OI.item_description, OI.quantity, OI.unit_amount
-         FROM order_header OH, order_item_ship_group OSIG, order_item OI, product P
-         WHERE OSIG.customer_party_id = 'CustDemo1'
-         GROUP BY OH.order_name;
+SELECT OH.order_id, OSIG.ship_group_seq_id, OH.order_name, OSIG.customer_party_id,
+        OI.order_item_seq_id, OI.product_id, OI.item_description, OI.quantity, OI.unit_amount
+        FROM order_header OH
+        INNER JOIN order_item_ship_group OSIG ON OH.order_id = OSIG.order_id
+        INNER JOIN order_item OI ON OI.order_id = OSIG.order_id
+        WHERE OSIG.customer_party_id = 'CustDemo1';
+        
++----------+-------------------+--------------+-------------------+-------------------+-------------+-------------------------+----------+-------------+
+| order_id | ship_group_seq_id | order_name   | customer_party_id | order_item_seq_id | product_id  | item_description        | quantity | unit_amount |
++----------+-------------------+--------------+-------------------+-------------------+-------------+-------------------------+----------+-------------+
+| 1051     | 01                | Test Order 1 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One   | 1.000000 |    16.99000 |
+| 1051     | 01                | Test Order 1 | CustDemo1         | 02                | DEMO_UNIT_2 | Demo Product Unit Two   | 3.000000 |    18.99000 |
+| 1051     | 01                | Test Order 1 | CustDemo1         | 03                | NULL        | Rental Item             | 3.000000 |     1.33000 |
+| 1051     | 02                | Test Order 1 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One   | 1.000000 |    16.99000 |
+| 1051     | 02                | Test Order 1 | CustDemo1         | 02                | DEMO_UNIT_2 | Demo Product Unit Two   | 3.000000 |    18.99000 |
+| 1051     | 02                | Test Order 1 | CustDemo1         | 03                | NULL        | Rental Item             | 3.000000 |     1.33000 |
+| 1052     | 01                | Test Order 2 | CustDemo1         | 01                | DEMO_UNIT_3 | Demo Product Unit Three | 1.000000 |    14.99000 |
+| 1052     | 01                | Test Order 2 | CustDemo1         | 02                | NULL        | Rental Item             | 1.000000 |     1.33000 |
++----------+-------------------+--------------+-------------------+-------------------+-------------+-------------------------+----------+-------------+
 
-+----------+-------------------+--------------+-------------------+-------------------+-------------+-----------------------+----------+-------------+
-| order_id | ship_group_seq_id | order_name   | customer_party_id | order_item_seq_id | product_id  | item_description      | quantity | unit_amount |
-+----------+-------------------+--------------+-------------------+-------------------+-------------+-----------------------+----------+-------------+
-| 1051     | 01                | Test Order 1 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |
-| 1052     | 01                | Test Order 2 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |
-| 1102     | 01                | Test Order 3 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |
-| 1153     | 01                | Test Order 4 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |
-| 1255     | 01                | Test Order 5 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |
-| 1061     | 01                | Test Order 6 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |
-| 1064     | 01                | Test Order 7 | CustDemo1         | 01                | DEMO_UNIT_1 | Demo Product Unit One | 1.000000 |    16.99000 |
-+----------+-------------------+--------------+-------------------+-------------------+-------------+-----------------------+----------+-------------+
 
 ===========================================================================================================
 25) List facilityId and total where total = sum of (orderItem.quantity X orderItem.unitAmount).
