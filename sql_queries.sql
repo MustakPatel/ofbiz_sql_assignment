@@ -55,12 +55,15 @@ SELECT * FROM order_header ORDER BY order_date DESC;
 ===========================================================================================================
 4) Output the count of Order Item Ship Group for each Shipment Method Type Id.
 
-SELECT COUNT(shipment_method_type_id) FROM order_item_ship_group;
-+--------------------------------+
-| count(shipment_method_type_id) |
-+--------------------------------+
-|                             12 |
-+--------------------------------+
+SELECT COUNT(shipment_method_type_id) AS total_OrderItemShipGroup
+        FROM order_item_ship_group
+        GROUP BY shipment_method_type_id;
+
++--------------------------+
+| total_OrderItemShipGroup |
++--------------------------+
+|                       12 |
++--------------------------+
 
 ===========================================================================================================
 5) List the Order Header details with grand total greater than 50.
@@ -112,10 +115,21 @@ SELECT * FROM order_item WHERE order_id = 1102 AND ship_group_seq_id = 01;
 
 ===========================================================================================================
 9) List the Order Item details for only those products for which chargeShipping is set to "Y".
+solution 1) SELECT O.product_id,O.order_item_seq_id,O.ship_group_seq_id,
+                    O.product_id,O.item_description, O.quantity,O.UNIT_AMOUNT,
+                    P.charge_shipping,P.manufacturer_party_id
+                    FROM order_item O
+                    INNER JOIN product P ON O.product_id = P.product_id
+                    WHERE P.charge_shipping = 'Y'
+                    GROUP BY P.product_id;
 
-SELECT O.product_id,O.order_item_seq_id,O.ship_group_seq_id,O.product_id,O.item_description,
-        O.quantity,O.UNIT_AMOUNT,P.charge_shipping,P.manufacturer_party_id FROM order_item O,
-         product P WHERE O.product_id = P.product_id AND P.charge_shippi
+solution 2) SELECT O.product_id,O.order_item_seq_id,O.ship_group_seq_id,O.product_id,O.item_description,
+                    O.quantity,O.UNIT_AMOUNT,P.charge_shipping,P.manufacturer_party_id
+                    FROM order_item O,product P
+                    WHERE O.product_id = P.product_id
+                    AND P.charge_shipping = 'Y'
+                    GROUP BY P.product_id;
+
 +-------------+-------------------+-------------------+-------------+-------------------------+----------+-------------+-----------------+-----------------------+
 | product_id  | order_item_seq_id | ship_group_seq_id | product_id  | item_description        | quantity | UNIT_AMOUNT | charge_shipping | manufacturer_party_id |
 +-------------+-------------------+-------------------+-------------+-------------------------+----------+-------------+-----------------+-----------------------+
@@ -129,7 +143,10 @@ SELECT O.product_id,O.order_item_seq_id,O.ship_group_seq_id,O.product_id,O.item_
 ===========================================================================================================
 10) List the Person details whose employment status is either EMPS_SELF or EMPS_FULLTIME without using the OR operator.
 
-SELECT * FROM person WHERE employment_status_enum_id IN ('EMPS_SELF','EMPS_FULLTIME');
+SELECT * FROM person
+        WHERE employment_status_enum_id
+        IN ('EMPS_SELF','EMPS_FULLTIME');
+
 +-----------+------------+-------------+-----------+--------+------------+---------------------------+-------------------+
 | PARTY_ID  | FIRST_NAME | MIDDLE_NAME | LAST_NAME | GENDER | BIRTH_DATE | EMPLOYMENT_STATUS_ENUM_ID | OCCUPATION        |
 +-----------+------------+-------------+-----------+--------+------------+---------------------------+-------------------+
@@ -173,12 +190,11 @@ SELECT order_id,order_type_id,order_name,order_date,status_id,
 ===========================================================================================================
 13) List the Order Header records where grand total is greater than highest grand total of the order date on 2020-04-17.
 
-SELECT * FROM order_header
-        GROUP BY grand_total
-        HAVING SUM(grand_total) > (SELECT SUM(grand_total)
-                                    FROM order_header
-                                    WHERE order_date = '2020-04-17');
-
+SELECT  * FROM order_header
+        GROUP BY order_id
+        HAVING SUM(grand_total) > (SELECT SUM(grand_total) FROM order_header
+                                        WHERE order_date = '2020=04-17');
+                                        
 Empty set (0.00 sec)
 
 
@@ -427,4 +443,19 @@ SELECT OH.order_id, OSIG.ship_group_seq_id, OH.order_name, OSIG.customer_party_i
 ===========================================================================================================
 25) List facilityId and total where total = sum of (orderItem.quantity X orderItem.unitAmount).
 
+SELECT F.facility_id, SUM(OI.quantity*OI.unit_amount) AS sum_of_quantity_and_unitAmount
+        FROM order_item OI
+        INNER JOIN order_item_ship_group OISG
+        ON OISG.order_id = OI.order_id
+        INNER JOIN facility F
+        ON OISG.facility_id = F.facility_id
+        GROUP BY F.facility_id;
+
++--------------------+--------------------------------+
+| facility_id        | sum_of_quantity_and_unitAmount |
++--------------------+--------------------------------+
+| RegionalWarehouse1 |                213.89000000000 |
+| RegionalWarehouse2 |                205.85000000000 |
+| WebStoreWarehouse  |                467.70000000000 |
++--------------------+--------------------------------+
 ===========================================================================================================
